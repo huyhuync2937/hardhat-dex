@@ -9,15 +9,17 @@ error Pool__InvalidTokenRatio();
 error Pool__ZeroLiquidityToken();
 error Pool__InvalidToken();
 
-contract Pool is LiquidityToken, ReentrancyGuard {
+contract Pool is ReentrancyGuard {
     IERC20 private immutable i_token0;
     IERC20 private immutable i_token1;
+    LiquidityToken private immutable i_lp;
+    
 
     uint256 private s_reserve0;
     uint256 private s_reserve1;
 
     uint8 private immutable i_fee;
-
+    
     event AddedLiquidity(
         uint256 indexed liquidityToken,
         address token0,
@@ -41,14 +43,17 @@ contract Pool is LiquidityToken, ReentrancyGuard {
         uint256 indexed amountOut
     );
 
+    event TransferAttempt(address from, address to, uint256 value);
+
     constructor(
         address token0,
         address token1,
         uint8 fee
-    ) LiquidityToken("LiquidityToken", "Linea_USD") {
+    ) {
         i_token0 = IERC20(token0);
         i_token1 = IERC20(token1);
         i_fee = fee;
+        i_lp  = new LiquidityToken(token0,token1);
     }
 
     function _updateLiquidity(uint256 reserve0, uint256 reserve1) internal {
@@ -83,10 +88,16 @@ contract Pool is LiquidityToken, ReentrancyGuard {
         emit Swapped(address(tokenIn), amountIn, address(tokenOut), amountOut);
     }
 
-    function getAmountOut(
-        address _tokenIn,
-        uint amountIn
-    ) public view returns (uint, uint, uint, bool) {
+    function getAmountOut(address _tokenIn, uint256 amountIn)
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            bool
+        )
+    {
         require(
             _tokenIn == address(i_token0) || _tokenIn == address(i_token1),
             "Invalid token"
@@ -111,10 +122,12 @@ contract Pool is LiquidityToken, ReentrancyGuard {
         return (amountOut, resIn, resOut, isToken0);
     }
 
-    function addLiquidity(
-        uint256 amount0,
-        uint256 amount1
-    ) external nonReentrant {
+
+    function addLiquidity(uint256 amount0, uint256 amount1)
+        external
+        payable
+        nonReentrant
+    {
         uint256 reserver0 = s_reserve0;
         uint256 reserver1 = s_reserve1;
 
@@ -136,8 +149,8 @@ contract Pool is LiquidityToken, ReentrancyGuard {
         // yx + dxy = xy + dyx
         // dxy = dyx
         // dxy/x = dy
-
-        uint256 liquidityTokenSupply = totalSupply();
+       
+        uint256 liquidityTokenSupply = i_lp.totalSupply();
         uint256 liquidityTokens;
 
         if (liquidityTokenSupply > 0) {
@@ -145,8 +158,8 @@ contract Pool is LiquidityToken, ReentrancyGuard {
         } else {
             liquidityTokens = _sqrt(amount0 * amount1);
         }
-        if (liquidityTokens == 0) revert Pool__ZeroLiquidityToken();
-        _mint(msg.sender, liquidityTokens);
+        // if (liquidityTokens == 0) revert Pool__ZeroLiquidityToken();
+        i_lp.mint(msg.sender, liquidityTokens);
         _updateLiquidity(reserver0 + amount0, reserver1 + amount1);
 
         emit AddedLiquidity(
@@ -163,7 +176,7 @@ contract Pool is LiquidityToken, ReentrancyGuard {
             liquidityToken
         );
 
-        _burn(msg.sender, liquidityToken);
+        i_lp.burn(msg.sender, liquidityToken);
         _updateLiquidity(s_reserve0 - amount0, s_reserve1 - amount1);
 
         IERC20 token0 = i_token0;
@@ -181,9 +194,11 @@ contract Pool is LiquidityToken, ReentrancyGuard {
         );
     }
 
-    function getAmountsOnRemovingLiquidity(
-        uint256 liquidityToken
-    ) public view returns (uint256 amount0, uint256 amount1) {
+    function getAmountsOnRemovingLiquidity(uint256 liquidityToken)
+        public
+        view
+        returns (uint256 amount0, uint256 amount1)
+    {
         require(liquidityToken > 0, "liquidity token is valid");
         // t = totalSupply of shares
         // s = shares
@@ -195,8 +210,8 @@ contract Pool is LiquidityToken, ReentrancyGuard {
         // dl = ls/t
 
         // uint256 tokenBalance = balanceOf(msg.sender);
-        amount0 = (s_reserve0 * liquidityToken) / totalSupply();
-        amount1 = (s_reserve1 * liquidityToken) / totalSupply();
+        amount0 = (s_reserve0 * liquidityToken) / i_lp.totalSupply();
+        amount1 = (s_reserve1 * liquidityToken) / i_lp.totalSupply();
     }
 
     function _sqrt(uint256 y) private pure returns (uint256 z) {
@@ -211,7 +226,8 @@ contract Pool is LiquidityToken, ReentrancyGuard {
             z = 1;
         }
     }
-     function getReserves() public view returns (uint256, uint256) {
+
+    function getReserves() public view returns (uint256, uint256) {
         return (s_reserve0, s_reserve1);
     }
 

@@ -20,7 +20,7 @@ contract PoolFactory {
         address token1;
         uint256 reserve0;
         uint256 reserve1;
-        uint256 totalSupply;
+        // uint256 totalSupply;
         address liquidityToken;
         uint8 fee;
     }
@@ -56,7 +56,7 @@ contract PoolFactory {
     function getPoolDetails() external view returns (PoolData[] memory) {
         PoolData[] memory pools = new PoolData[](s_poolsList.length);
 
-        for (uint i = 0; i < s_poolsList.length; i) {
+        for (uint i = 0; i < s_poolsList.length; i++) {
             address poolAddress = s_poolsList[i][2];
             Pool pool = Pool(poolAddress);
 
@@ -68,7 +68,7 @@ contract PoolFactory {
                 token1: s_poolsList[i][1],
                 reserve0: reserve0,
                 reserve1: reserve1,
-                totalSupply: pool.totalSupply(),
+                // totalSupply: pool.totalSupply(),
                 liquidityToken: poolAddress,
                 fee: s_tokensToPool[s_poolsList[i][0]][s_poolsList[i][1]].fee
             });

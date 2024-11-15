@@ -1,6 +1,5 @@
-
-export const USDAddress = '0x1971BBe25F36Deea8999250a92DF8Fa2fFA841Ea';
-export const TokenAddress = '0xaB8f4Ffe38173970FcF813D860a9fc8B9FA12201';
-export const VaultAddress = '0x4125b8A3C9B69ec025cb1B1f8ad6e1dD4479cC76';
-export const PoolAddress = '0x1d99C01cE8F1801199338b096c020F38Cd3F16Ef';
-export const PoolFactoryAddress = '0xfC96729D527615E75ea03614Da328358A42Fe2c1';
+export const USDAddress = '0x6F187e82db876Cbf8f5AcfE1F3698DFc4f888334';
+export const TokenAddress = '0xA902F5e3235E06e5fCb10877A67d91d6B47Fa935';
+export const PoolFactoryAddress = '0xd69DBFD48ca934f928898877cb93845B1c628e0f';
+export const PoolAddress = '0xd706853a97ae2143ED94450985efE7b445A31F0A';
+export const ETHWAddress = '0xe6354CFFECE369A02639d960Ddfbd919a15A2fEA';

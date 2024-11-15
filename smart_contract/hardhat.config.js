@@ -8,6 +8,8 @@ module.exports = {
     testnet: {
       url: process.env.RPC_URL,
       accounts: [process.env.YOUR_PRIVATE_KEY],
+      gas: 3093665,
+      gasPrice: 10533235060
     }
   }
   // ,
